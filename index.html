@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Topological Sorting Validator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Topological Sorting Validator</h1>
+        
+        <div class="graph-controls">
+            <input type="text" id="add-vertex-input" placeholder="Enter Vertex">
+            <button onclick="game.addVertex()">Add Vertex</button>
+            <select id="from-vertex-select">
+                <option value="">From Vertex</option>
+            </select>
+            <input type="text" id="to-vertex-input" placeholder="To Vertex">
+            <button onclick="game.addEdge()">Add Edge</button>
+            <button onclick="game.generateRandomGraph()">Random Graph</button>
+            <button onclick="game.validateTopologicalSort()">Validate Sort</button>
+            <button onclick="game.clearGraph()">Clear Graph</button>
+        </div>
+
+        <div id="graph-display">
+            <h3>Graph Visualization:</h3>
+            <svg id="graph-svg"></svg>
+        </div>
+
+        <div id="edges-display">
+            <h3>Graph Edges:</h3>
+            <div id="edges-container"></div>
+        </div>
+
+        <div id="result-display">
+            <h3>Validation Result:</h3>
+            <div id="sorting-result"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
