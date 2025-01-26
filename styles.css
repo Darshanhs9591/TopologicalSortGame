@@ -1,85 +1,85 @@
 body {
-  font-family: 'Arial', sans-serif;
-  background: linear-gradient(to bottom, #273b40, #1d1d1d);
-  color: #cae9ea;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  margin: 0;
-  padding: 20px;
-  box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to bottom, #2c3e50, #1a2b3c);
+    color: #ecf0f1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
 }
 .game-container {
-  background-color: rgba(44, 62, 80, 0.8);
-  border-radius: 15px;
-  padding: 30px;
-  width: 90%;
-  max-width: 1200px;
-  text-align: center;
+    background-color: rgba(44, 62, 80, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    width: 90%;
+    max-width: 1200px;
+    text-align: center;
 }
 .graph-controls {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 button {
-  background-color: #3c4748;
-  border: none;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+    background-color: #3498db;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 button:hover {
-  background-color: #208cdc;
+    background-color: #2980b9;
 }
 input, select {
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #34495e;
-  margin: 5px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #34495e;
+    margin: 5px;
 }
 #graph-display, #result-display {
-  background-color: #34495e;
-  border-radius: 10px;
-  padding: 15px;
-  margin-top: 20px;
+    background-color: #34495e;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
 }
 #graph-svg {
-  width: 100%;
-  height: 400px;
+    width: 100%;
+    height: 400px;
 }
 .edge {
-  margin: 5px;
-  padding: 5px;
-  background-color: #2ecc71;
-  border-radius: 3px;
-  display: inline-block;
+    margin: 5px;
+    padding: 5px;
+    background-color: #2ecc71;
+    border-radius: 3px;
+    display: inline-block;
 }
 .validation-step {
-  margin: 5px;
-  padding: 10px;
-  background-color: #27ae60;
-  border-radius: 5px;
-  display: inline-block;
+    margin: 5px;
+    padding: 10px;
+    background-color: #27ae60;
+    border-radius: 5px;
+    display: inline-block;
 }
 .win-message {
-  color: #2ecc71;
-  font-weight: bold;
-  font-size: 1.2em;
-  background-color: rgba(46, 204, 113, 0.2);
-  padding: 10px;
-  border-radius: 5px;
+    color: #2ecc71;
+    font-weight: bold;
+    font-size: 1.2em;
+    background-color: rgba(46, 204, 113, 0.2);
+    padding: 10px;
+    border-radius: 5px;
 }
 .loss-message {
-  color: #e74c3c;
-  font-weight: bold;
-  font-size: 1.2em;
-  background-color: rgba(231, 76, 60, 0.2);
-  padding: 10px;
-  border-radius: 5px;
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 1.2em;
+    background-color: rgba(231, 76, 60, 0.2);
+    padding: 10px;
+    border-radius: 5px;
 }
