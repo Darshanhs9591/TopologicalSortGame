@@ -8,40 +8,72 @@ class TopologicalSortValidator {
         this.edgesContainer = document.getElementById('edges-container');
         this.sortingResult = document.getElementById('sorting-result');
         this.graphSvg = d3.select('#graph-svg');
+        this.scoreDisplay = document.getElementById('score');
+        this.streakDisplay = document.getElementById('streak');
+        this.score = 0;
+        this.streak = 0;
+        this.loadScore();
+
+        // Add event listeners for enter key
+        this.addVertexInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addVertex();
+        });
+        this.toVertexInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addEdge();
+        });
     }
 
-    clearGraph() {
-        this.graph.clear();
-        this.vertices.clear();
-        this.fromVertexSelect.innerHTML = '<option value="">From Vertex</option>';
-        this.edgesContainer.innerHTML = '';
-        this.sortingResult.innerHTML = '';
-        this.renderGraph();
+    loadScore() {
+        const savedScore = localStorage.getItem('topoSortScore');
+        const savedStreak = localStorage.getItem('topoSortStreak');
+        if (savedScore) this.score = parseInt(savedScore);
+        if (savedStreak) this.streak = parseInt(savedStreak);
+        this.updateScoreDisplay();
+    }
+
+    saveScore() {
+        localStorage.setItem('topoSortScore', this.score.toString());
+        localStorage.setItem('topoSortStreak', this.streak.toString());
+    }
+
+    updateScore(correct, points) {
+        if (correct) {
+            this.score += points;
+            this.streak++;
+        } else {
+            this.streak = 0;
+        }
+        this.updateScoreDisplay();
+        this.saveScore();
+    }
+
+    resetScore() {
+        this.score = 0;
+        this.streak = 0;
+        this.updateScoreDisplay();
+        this.saveScore();
+    }
+
+    updateScoreDisplay() {
+        this.scoreDisplay.textContent = this.score;
+        this.streakDisplay.textContent = this.streak;
     }
 
     addVertex() {
-        const vertexName = this.addVertexInput.value.trim().toUpperCase();
-        
-        if (!vertexName) {
-            alert('Please enter a vertex name!');
-            return;
+        const vertex = this.addVertexInput.value.trim().toUpperCase();
+        if (vertex && !this.vertices.has(vertex)) {
+            this.vertices.add(vertex);
+            this.graph.set(vertex, []);
+            this.updateVertexSelector();
+            this.renderGraph();
+            this.sortingResult.innerHTML = '';
         }
-
-        if (this.vertices.has(vertexName)) {
-            alert('Vertex already exists!');
-            return;
-        }
-
-        this.vertices.add(vertexName);
-        this.graph.set(vertexName, []);
-        this.updateVertexSelector();
         this.addVertexInput.value = '';
-        this.renderGraph();
     }
 
     updateVertexSelector() {
         this.fromVertexSelect.innerHTML = '<option value="">From Vertex</option>';
-        this.vertices.forEach(vertex => {
+        Array.from(this.vertices).sort().forEach(vertex => {
             const option = document.createElement('option');
             option.value = vertex;
             option.textContent = vertex;
@@ -52,245 +84,225 @@ class TopologicalSortValidator {
     addEdge() {
         const fromVertex = this.fromVertexSelect.value;
         const toVertex = this.toVertexInput.value.trim().toUpperCase();
-
-        if (!fromVertex || !toVertex) {
-            alert('Please select a FROM vertex and enter a TO vertex!');
-            return;
-        }
-
-        if (fromVertex === toVertex) {
-            alert('Cannot create an edge to the same vertex!');
-            return;
-        }
-
-        if (!this.vertices.has(toVertex)) {
-            this.vertices.add(toVertex);
-            this.graph.set(toVertex, []);
-            this.updateVertexSelector();
-        }
-
-        if (!this.graph.get(fromVertex).includes(toVertex)) {
+        if (fromVertex && toVertex && this.vertices.has(toVertex) && 
+            fromVertex !== toVertex && !this.graph.get(fromVertex).includes(toVertex)) {
             this.graph.get(fromVertex).push(toVertex);
             this.updateEdgesDisplay();
             this.renderGraph();
-        } else {
-            alert('Edge already exists!');
+            this.sortingResult.innerHTML = '';
         }
-
         this.toVertexInput.value = '';
     }
 
     updateEdgesDisplay() {
         this.edgesContainer.innerHTML = '';
+        const edges = [];
         this.graph.forEach((neighbors, vertex) => {
             neighbors.forEach(neighbor => {
-                const edgeElement = document.createElement('div');
-                edgeElement.classList.add('edge');
-                edgeElement.textContent = `${vertex} → ${neighbor}`;
-                this.edgesContainer.appendChild(edgeElement);
+                edges.push(`${vertex} → ${neighbor}`);
             });
+        });
+        edges.sort().forEach(edge => {
+            const edgeDiv = document.createElement('div');
+            edgeDiv.className = 'edge';
+            edgeDiv.textContent = edge;
+            this.edgesContainer.appendChild(edgeDiv);
         });
     }
 
     renderGraph() {
-        this.graphSvg.selectAll("*").remove();
-        const width = 800;
-        const height = 400;
-
-        const nodes = Array.from(this.vertices).map(v => ({id: v}));
+        this.graphSvg.selectAll('*').remove();
+        const nodes = Array.from(this.vertices).map(v => ({ id: v }));
         const links = [];
-
         this.graph.forEach((neighbors, vertex) => {
-            neighbors.forEach(neighbor => {
-                links.push({source: vertex, target: neighbor});
-            });
+            neighbors.forEach(neighbor => links.push({ source: vertex, target: neighbor }));
         });
+
+        // Add arrow markers
+        this.graphSvg.append('defs').append('marker')
+            .attr('id', 'arrowhead')
+            .attr('viewBox', '-0 -5 10 10')
+            .attr('refX', 20)
+            .attr('refY', 0)
+            .attr('orient', 'auto')
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#ecf0f1');
 
         const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id))
-            .force("charge", d3.forceManyBody().strength(-300))
-            .force("center", d3.forceCenter(width / 2, height / 2));
+            .force('link', d3.forceLink(links).id(d => d.id).distance(100))
+            .force('charge', d3.forceManyBody().strength(-300))
+            .force('center', d3.forceCenter(this.graphSvg.node().clientWidth / 2, 200));
 
-        const link = this.graphSvg
-            .append("g")
-            .selectAll("line")
+        const link = this.graphSvg.append('g')
+            .selectAll('line')
             .data(links)
-            .enter().append("line")
-            .attr("stroke", "#3498db")
-            .attr("stroke-width", 2)
-            .attr("marker-end", "url(#arrowhead)");
+            .enter().append('line')
+            .attr('stroke', '#ecf0f1')
+            .attr('stroke-width', 2)
+            .attr('marker-end', 'url(#arrowhead)');
 
-        const node = this.graphSvg
-            .append("g")
-            .selectAll("circle")
+        const node = this.graphSvg.append('g')
+            .selectAll('circle')
             .data(nodes)
-            .enter().append("circle")
-            .attr("r", 20)
-            .attr("fill", "#2ecc71");
+            .enter().append('circle')
+            .attr('r', 15)
+            .attr('fill', '#3498db')
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
 
-        const label = this.graphSvg
-            .append("g")
-            .selectAll("text")
+        const text = this.graphSvg.append('g')
+            .selectAll('text')
             .data(nodes)
-            .enter().append("text")
-            .text(d => d.id)
-            .attr("font-size", 12)
-            .attr("fill", "white")
-            .attr("text-anchor", "middle")
-            .attr("alignment-baseline", "middle");
+            .enter().append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'central')
+            .attr('fill', '#ecf0f1')
+            .attr('font-weight', 'bold')
+            .text(d => d.id);
 
-        // Arrowhead marker
-        this.graphSvg.append("defs")
-            .append("marker")
-            .attr("id", "arrowhead")
-            .attr("viewBox", "-0 -5 10 10")
-            .attr("refX", 30)
-            .attr("refY", 0)
-            .attr("orient", "auto")
-            .attr("markerWidth", 6)
-            .attr("markerHeight", 6)
-            .append("path")
-            .attr("d", "M 0,-5 L 10 ,0 L 0,5")
-            .attr("fill", "#3498db");
-
-        simulation.on("tick", () => {
+        simulation.on('tick', () => {
             link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    return d.source.x + (dx * (length - 25)) / length;
+                })
+                .attr('y2', d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    return d.source.y + (dy * (length - 25)) / length;
+                });
 
             node
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y);
+                .attr('cx', d => d.x = Math.max(15, Math.min(this.graphSvg.node().clientWidth - 15, d.x)))
+                .attr('cy', d => d.y = Math.max(15, Math.min(385, d.y)));
 
-            label
-                .attr("x", d => d.x)
-                .attr("y", d => d.y);
+            text
+                .attr('x', d => d.x)
+                .attr('y', d => d.y);
         });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
     }
 
     generateRandomGraph() {
-        this.clearGraph();
-        const vertices = ['A', 'B', 'C', 'D', 'E', 'F'];
-        const edges = [
-            ['A', 'B'], ['A', 'C'], 
-            ['B', 'D'], ['C', 'D'], 
-            ['D', 'E'], ['E', 'F']
-        ];
-
-        // Add vertices
-        vertices.forEach(v => {
-            this.vertices.add(v);
-            this.graph.set(v, []);
+        const numVertices = Math.floor(Math.random() * 4) + 4; // Random vertices: 4-7
+        const vertices = Array.from({ length: numVertices }, (_, i) => `V${i + 1}`);
+        this.vertices.clear();
+        this.graph.clear();
+        vertices.forEach(vertex => {
+            this.vertices.add(vertex);
+            this.graph.set(vertex, []);
         });
 
-        // Add edges
-        edges.forEach(([from, to]) => {
-            this.graph.get(from).push(to);
-        });
-
-        this.updateVertexSelector();
-        this.updateEdgesDisplay();
-        this.renderGraph();
-    }
-
-    detectCycle() {
-        const visited = new Set();
-        const recursionStack = new Set();
-
-        const dfs = (vertex) => {
-            if (recursionStack.has(vertex)) return true;
-            if (visited.has(vertex)) return false;
-
-            visited.add(vertex);
-            recursionStack.add(vertex);
-
-            for (const neighbor of this.graph.get(vertex) || []) {
-                if (dfs(neighbor)) return true;
-            }
-
-            recursionStack.delete(vertex);
-            return false;
-        };
-
-        for (const vertex of this.vertices) {
-            if (dfs(vertex)) return true;
-        }
-        return false;
-    }
-
-    validateTopologicalSort() {
-        // Check if graph is empty
-        if (this.vertices.size === 0) {
-            this.displayResult(false, 'Graph is empty. Please add vertices and edges.');
-            return;
-        }
-
-        // Check for cycles
-        if (this.detectCycle()) {
-            this.displayResult(false, 'Graph contains a cycle. Topological sort is impossible.');
-            return;
-        }
-
-        // Prompt for user's proposed sorting
-        const userSortInput = prompt('Enter the proposed topological sort (comma-separated vertices):');
-        if (!userSortInput) {
-            this.displayResult(false, 'No input provided.');
-            return;
-        }
-
-        const userSort = userSortInput.split(',')
-            .map(v => v.trim().toUpperCase())
-            .filter(v => v !== '');
-
-        // Step 1: Check if all vertices are present
-        const sortSet = new Set(userSort);
-        const missingVertices = [...this.vertices].filter(v => !sortSet.has(v));
-        
-        if (missingVertices.length > 0) {
-            this.displayResult(false, `Missing vertices: ${missingVertices.join(', ')}`);
-            return;
-        }
-
-        // Step 2: Check for extra vertices
-        const extraVertices = userSort.filter(v => !this.vertices.has(v));
-        if (extraVertices.length > 0) {
-            this.displayResult(false, `Extra vertices: ${extraVertices.join(', ')}`);
-            return;
-        }
-
-        // Step 3: Check order constraints
-        const invalidEdges = [];
-        for (const [vertex, neighbors] of this.graph.entries()) {
-            const vertexIndex = userSort.indexOf(vertex);
-            
-            for (const neighbor of neighbors) {
-                const neighborIndex = userSort.indexOf(neighbor);
-                
-                if (vertexIndex > neighborIndex) {
-                    invalidEdges.push(`${vertex} → ${neighbor}`);
+        // Generate edges ensuring no cycles
+        for (let i = 0; i < numVertices - 1; i++) {
+            for (let j = i + 1; j < numVertices; j++) {
+                if (Math.random() < 0.5) {
+                    this.graph.get(vertices[i]).push(vertices[j]);
                 }
             }
         }
 
-        if (invalidEdges.length > 0) {
-            this.displayResult(false, `Invalid order for edges: ${invalidEdges.join(', ')}`);
+        this.updateVertexSelector();
+        this.updateEdgesDisplay();
+        this.renderGraph();
+        this.sortingResult.innerHTML = '';
+    }
+
+    clearGraph() {
+        this.vertices.clear();
+        this.graph.clear();
+        this.updateVertexSelector();
+        this.updateEdgesDisplay();
+        this.renderGraph();
+        this.sortingResult.innerHTML = '';
+    }
+
+    validateTopologicalSort() {
+        const userSortInput = prompt('Enter the proposed topological sort (comma-separated vertices):');
+        if (!userSortInput) {
+            this.displayResult(false, 'No input provided.');
+            this.updateScore(false, 0);
             return;
         }
 
-        // If all checks pass
-        this.displayResult(true, 'Congratulations! Your topological sort is correct!');
+        const userSort = userSortInput.split(',').map(v => v.trim().toUpperCase());
+        
+        // Check if all vertices are included
+        const userSet = new Set(userSort);
+        const missing = [...this.vertices].filter(v => !userSet.has(v));
+        if (missing.length) {
+            this.displayResult(false, `Missing vertices: ${missing.join(', ')}`);
+            this.updateScore(false, 0);
+            return;
+        }
+
+        // Check if all vertices are valid
+        const invalid = userSort.filter(v => !this.vertices.has(v));
+        if (invalid.length) {
+            this.displayResult(false, `Invalid vertices: ${invalid.join(', ')}`);
+            this.updateScore(false, 0);
+            return;
+        }
+
+        // Check if each vertex appears exactly once
+        if (userSort.length !== this.vertices.size) {
+            this.displayResult(false, 'Each vertex must appear exactly once');
+            this.updateScore(false, 0);
+            return;
+        }
+
+        // Check if the ordering respects all edges
+        const invalid_edges = [];
+        for (const [v, neighbors] of this.graph.entries()) {
+            neighbors.forEach(n => {
+                if (userSort.indexOf(v) > userSort.indexOf(n)) {
+                    invalid_edges.push(`${v} → ${n}`);
+                }
+            });
+        }
+
+        if (invalid_edges.length) {
+            this.displayResult(false, `Invalid ordering for edges: ${invalid_edges.join(', ')}`);
+            this.updateScore(false, 0);
+            return;
+        }
+
+        // If we get here, the sort is valid
+        const points = 100 + (this.streak * 10); // Bonus points for streak
+        this.updateScore(true, points);
+        this.displayResult(true, `Correct! Score: +${points} points (including ${this.streak * 10} streak bonus)`);
     }
 
-    displayResult(isCorrect, message) {
-        const resultDiv = this.sortingResult;
-        resultDiv.innerHTML = `
-            <div class="${isCorrect ? 'win-message' : 'loss-message'}">
-                ${message}
-            </div>
-        `;
+    displayResult(correct, message) {
+        this.sortingResult.innerHTML = `<div class="${correct ? 'win-message' : 'loss-message'}">${message}</div>`;
     }
 }
 
+// Initialize the game
 const game = new TopologicalSortValidator();
