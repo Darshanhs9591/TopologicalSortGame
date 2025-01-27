@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Topological Sorting Validator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topological Sorting Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="game-container">
-        <h1>Topological Sorting Validator</h1>
-        
+        <h1>Topological Sorting Game</h1>
+        <div class="score-display">Score: <span id="score">0</span></div>
+        <div class="streak-display">Streak: <span id="streak">0</span></div>
         <div class="graph-controls">
             <input type="text" id="add-vertex-input" placeholder="Enter Vertex">
             <button onclick="game.addVertex()">Add Vertex</button>
@@ -21,18 +23,16 @@
             <button onclick="game.generateRandomGraph()">Random Graph</button>
             <button onclick="game.validateTopologicalSort()">Validate Sort</button>
             <button onclick="game.clearGraph()">Clear Graph</button>
+            <button onclick="game.resetScore()">Reset Score</button>
         </div>
-
         <div id="graph-display">
             <h3>Graph Visualization:</h3>
             <svg id="graph-svg"></svg>
         </div>
-
         <div id="edges-display">
             <h3>Graph Edges:</h3>
             <div id="edges-container"></div>
         </div>
-
         <div id="result-display">
             <h3>Validation Result:</h3>
             <div id="sorting-result"></div>
