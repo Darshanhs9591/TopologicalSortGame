@@ -14,4 +14,4 @@ COPY . .
 EXPOSE 4000
 
 # Run the app
-CMD ["node", "script.js"]
+CMD ["node", "TopologicalSorting.js"]
