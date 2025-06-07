@@ -11,6 +11,15 @@
   "author": "Darshanhs9591",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2"
-  }
+    "express": "^4.21.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Darshanhs9591/TopologicalSortGame.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Darshanhs9591/TopologicalSortGame/issues"
+  },
+  "homepage": "https://github.com/Darshanhs9591/TopologicalSortGame#readme"
 }
